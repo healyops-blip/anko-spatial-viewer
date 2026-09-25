@@ -10,8 +10,11 @@ capture, reconstruction, map publication, or Flutter business state.
 ## Current status
 
 The package decodes versioned `MapScene` JSON and renders its rooms and walls
-with RealityKit. The native view provides orbit and pinch-to-zoom gestures. The
-Flutter application supplies scene data through its iOS Platform View bridge.
+with RealityKit. Room names are placed directly on the 3D floor. Rooms marked
+as `unmonitored` receive a translucent fog layer, while cameras are rendered
+with online/offline state and a translucent coverage area. The native view
+provides orbit and pinch-to-zoom gestures. The Flutter application supplies
+scene data through its iOS Platform View bridge.
 
 ## Requirements
 

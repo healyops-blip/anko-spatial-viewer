@@ -15,6 +15,7 @@ public struct MapScene: Decodable, Equatable, Sendable {
     public let mapId: String
     public let unit: String
     public let rooms: [MapSceneRoom]
+    public let devices: [MapSceneDevice]?
 
     fileprivate func validate() throws {
         guard schemaVersion == AnkoSpatialViewer.mapSceneSchemaVersion else {
@@ -37,11 +38,25 @@ public struct MapSceneRoom: Decodable, Equatable, Sendable {
     public let name: String
     public let floorPolygon: [MapScenePoint]
     public let privacyEnabled: Bool
+    public let monitoringStatus: String?
+
+    public var isMonitored: Bool {
+        monitoringStatus != "unmonitored"
+    }
 }
 
 public struct MapScenePoint: Decodable, Equatable, Sendable {
     public let x: Float
     public let z: Float
+}
+
+public struct MapSceneDevice: Decodable, Equatable, Sendable {
+    public let id: String
+    public let productModel: String
+    public let roomId: String
+    public let position: MapScenePoint
+    public let coverageRadius: Float
+    public let online: Bool
 }
 
 public enum MapSceneError: Error, Equatable {

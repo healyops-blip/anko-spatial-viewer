@@ -126,6 +126,13 @@ private enum RoomEntityBuilder {
         for (index, room) in scene.rooms.enumerated() {
             home.addChild(makeFloor(for: room, index: index, metrics: metrics))
             addWalls(for: room, to: home, metrics: metrics)
+            home.addChild(makeLabel(for: room, metrics: metrics))
+            if !room.isMonitored {
+                home.addChild(makeFog(for: room, metrics: metrics))
+            }
+        }
+        for device in scene.devices ?? [] {
+            home.addChild(DeviceEntityBuilder.makeDevice(device, metrics: metrics))
         }
         return home
     }
@@ -182,6 +189,47 @@ private enum RoomEntityBuilder {
         return wall
     }
 
+    private static func makeLabel(
+        for room: MapSceneRoom,
+        metrics: SceneMetrics
+    ) -> ModelEntity {
+        let bounds = RoomBounds(room: room, metrics: metrics)
+        let mesh = MeshResource.generateText(
+            room.name,
+            extrusionDepth: 0.012,
+            font: .systemFont(ofSize: 0.42, weight: .semibold),
+            containerFrame: .zero,
+            alignment: .center,
+            lineBreakMode: .byWordWrapping
+        )
+        let material = UnlitMaterial(color: UIColor(red: 0.16, green: 0.25, blue: 0.34, alpha: 0.92))
+        let label = ModelEntity(mesh: mesh, materials: [material])
+        let labelBounds = label.visualBounds(relativeTo: label)
+        label.position = [
+            bounds.centerX - labelBounds.extents.x / 2,
+            0.09,
+            bounds.centerZ + labelBounds.extents.y / 2,
+        ]
+        label.orientation = simd_quatf(angle: -.pi / 2, axis: [1, 0, 0])
+        return label
+    }
+
+    private static func makeFog(
+        for room: MapSceneRoom,
+        metrics: SceneMetrics
+    ) -> ModelEntity {
+        let bounds = RoomBounds(room: room, metrics: metrics)
+        let material = UnlitMaterial(
+            color: UIColor(red: 0.55, green: 0.63, blue: 0.72, alpha: 0.42)
+        )
+        let fog = ModelEntity(
+            mesh: .generateBox(size: [bounds.width * 0.94, 0.14, bounds.depth * 0.94]),
+            materials: [material]
+        )
+        fog.position = [bounds.centerX, 0.08, bounds.centerZ]
+        return fog
+    }
+
     private static func floorColor(index: Int, isPrivate: Bool) -> UIColor {
         if isPrivate {
             return UIColor(red: 0.72, green: 0.76, blue: 0.80, alpha: 1)
@@ -192,6 +240,57 @@ private enum RoomEntityBuilder {
             UIColor(red: 0.82, green: 0.90, blue: 0.84, alpha: 1),
         ]
         return colors[index % colors.count]
+    }
+}
+
+private enum DeviceEntityBuilder {
+    static func makeDevice(_ device: MapSceneDevice, metrics: SceneMetrics) -> Entity {
+        let root = Entity()
+        let position = metrics.centered(device.position)
+        root.position = [position.x, 0, position.z]
+        root.addChild(makeCoverage(radius: device.coverageRadius, online: device.online))
+        root.addChild(makeCamera(online: device.online))
+        return root
+    }
+
+    private static func makeCoverage(radius: Float, online: Bool) -> ModelEntity {
+        let safeRadius = max(radius, 0.2)
+        let color = online
+            ? UIColor(red: 0.05, green: 0.46, blue: 0.98, alpha: 0.22)
+            : UIColor(red: 0.48, green: 0.53, blue: 0.59, alpha: 0.20)
+        let coverage = ModelEntity(
+            mesh: .generateSphere(radius: safeRadius),
+            materials: [UnlitMaterial(color: color)]
+        )
+        coverage.scale.y = 0.025 / (safeRadius * 2)
+        coverage.position.y = 0.025
+        return coverage
+    }
+
+    private static func makeCamera(online: Bool) -> Entity {
+        let camera = Entity()
+        let color = online
+            ? UIColor(red: 0.05, green: 0.42, blue: 0.92, alpha: 1)
+            : UIColor(red: 0.45, green: 0.49, blue: 0.54, alpha: 1)
+        let body = ModelEntity(
+            mesh: .generateBox(size: [0.42, 0.30, 0.26], cornerRadius: 0.07),
+            materials: [SimpleMaterial(color: color, roughness: 0.32, isMetallic: false)]
+        )
+        body.position.y = 0.32
+        let lens = ModelEntity(
+            mesh: .generateSphere(radius: 0.08),
+            materials: [SimpleMaterial(color: .black, roughness: 0.16, isMetallic: true)]
+        )
+        lens.position = [0, 0.34, 0.14]
+        let stand = ModelEntity(
+            mesh: .generateBox(size: [0.09, 0.18, 0.09]),
+            materials: [SimpleMaterial(color: color, roughness: 0.4, isMetallic: false)]
+        )
+        stand.position.y = 0.09
+        camera.addChild(body)
+        camera.addChild(lens)
+        camera.addChild(stand)
+        return camera
     }
 }
 
