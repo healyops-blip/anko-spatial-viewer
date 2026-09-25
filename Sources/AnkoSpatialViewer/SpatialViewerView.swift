@@ -207,7 +207,7 @@ private enum RoomEntityBuilder {
         let labelBounds = label.visualBounds(relativeTo: label)
         label.position = [
             bounds.centerX - labelBounds.extents.x / 2,
-            0.09,
+            0.19,
             bounds.centerZ + labelBounds.extents.y / 2,
         ]
         label.orientation = simd_quatf(angle: -.pi / 2, axis: [1, 0, 0])
