@@ -9,9 +9,9 @@ capture, reconstruction, map publication, or Flutter business state.
 
 ## Current status
 
-Version `0.1.0` establishes the package boundary and `MapScene` schema version.
-RealityKit rendering and the Flutter Platform View bridge will be added behind
-this stable module boundary.
+The package decodes versioned `MapScene` JSON and renders its rooms and walls
+with RealityKit. The native view provides orbit and pinch-to-zoom gestures. The
+Flutter application supplies scene data through its iOS Platform View bridge.
 
 ## Requirements
 
